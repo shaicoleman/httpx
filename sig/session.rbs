@@ -54,6 +54,10 @@ module HTTPX
 
     def set_request_callbacks: (Request request) -> void
 
+    def set_request_total_timeout: (Request request, Selector selector) -> void
+
+    def total_timeout_callback: (Request request, Numeric total_timeout) -> void
+
     def build_requests: (verb, uri, request_params) -> Array[Request]
                       | (Array[[verb, uri, request_params]], Hash[Symbol, untyped]) -> Array[Request]
                       | (Array[[verb, uri]], request_params) -> Array[Request]

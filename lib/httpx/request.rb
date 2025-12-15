@@ -125,6 +125,11 @@ module HTTPX
       @options.timeout[:request_timeout]
     end
 
+    # the total timeout defined for this request.
+    def total_timeout
+      @options.timeout[:total_timeout]
+    end
+
     def persistent?
       @persistent
     end

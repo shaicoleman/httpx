@@ -246,6 +246,8 @@ module HTTPX
 
     # sends the +request+ to the corresponding HTTPX::Connection
     def send_request(request, selector, options = request.options)
+      set_request_total_timeout(request, selector)
+
       error = begin
         catch(:resolve_error) do
           connection = find_connection(request.uri, selector, options)
@@ -291,6 +293,34 @@ module HTTPX
 
     def set_request_callbacks(request)
       request.on(:promise, &method(:on_promise))
+    end
+
+    def set_request_total_timeout(request, selector)
+      total_timeout = request.total_timeout
+
+      return if total_timeout.nil? || (total_timeout.respond_to?(:infinite?) && total_timeout.infinite?)
+
+      timer = selector.after(total_timeout) do
+        total_timeout_callback(request, total_timeout)
+      end
+
+      request.active_timeouts << :total_timeout
+
+      request.set_timeout_callback(:complete) do
+        timer.cancel
+        request.active_timeouts.delete(:total_timeout)
+      end
+    end
+
+    def total_timeout_callback(request, total_timeout)
+      response = request.response
+
+      return if response && response.finished?
+
+      error = TotalTimeoutError.new(request, request.response, total_timeout)
+      request_response = ErrorResponse.new(request, error)
+      request.response = request_response
+      request.emit(:response, request_response)
     end
 
     def do_init_connection(connection, selector)
