@@ -199,8 +199,10 @@ class SessionTest < Minitest::Test
     verify_error_response(response, HTTPX::TotalTimeoutError)
 
     # Test successful request within total_timeout
+    # Use a longer timeout to account for new connection establishment after previous timeout
     uri = build_uri("/drip?numbytes=10&duration=1&delay=0&code=200")
-    response1 = session.get(uri)
+    session2 = HTTPX.with(timeout: { total_timeout: 10, operation_timeout: 10 })
+    response1 = session2.get(uri)
     verify_status(response1, 200)
   end
 

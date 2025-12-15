@@ -301,7 +301,7 @@ module HTTPX
       return if total_timeout.nil? || (total_timeout.respond_to?(:infinite?) && total_timeout.infinite?)
 
       timer = selector.after(total_timeout) do
-        total_timeout_callback(request, total_timeout)
+        total_timeout_callback(request, total_timeout, selector)
       end
 
       request.active_timeouts << :total_timeout
@@ -312,10 +312,17 @@ module HTTPX
       end
     end
 
-    def total_timeout_callback(request, total_timeout)
+    def total_timeout_callback(request, total_timeout, selector)
       response = request.response
 
       return if response && response.finished?
+
+      request.timed_out!
+
+      # Close the connection to prevent reuse in a corrupted state
+      if (connection = selector.find_connection(request.uri, request.options))
+        connection.force_close
+      end
 
       error = TotalTimeoutError.new(request, request.response, total_timeout)
       request_response = ErrorResponse.new(request, error)

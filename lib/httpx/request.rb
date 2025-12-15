@@ -94,6 +94,17 @@ module HTTPX
       @ping = false
       @persistent = @options.persistent
       @active_timeouts = []
+      @timed_out = false
+    end
+
+    # whether the request has been timed out by a total timeout.
+    def timed_out?
+      @timed_out
+    end
+
+    # marks the request as having timed out.
+    def timed_out!
+      @timed_out = true
     end
 
     def complete!(response = @response)
@@ -273,6 +284,7 @@ module HTTPX
         @response = nil
         @drainer = nil
         @active_timeouts.clear
+        @timed_out = false
       when :headers
         return unless @state == :idle
 

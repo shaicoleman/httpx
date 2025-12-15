@@ -606,6 +606,10 @@ module HTTPX
         end
         @response_received_at = Utils.now
         @inflight -= 1
+
+        # Skip emitting response if request already timed out (total_timeout)
+        next if request.timed_out?
+
         response.finish!
         request.emit(:response, response)
       end
@@ -670,6 +674,10 @@ module HTTPX
         end
 
         @inflight -= 1
+
+        # Skip emitting error if request already timed out (total_timeout)
+        next if request.timed_out?
+
         response = ErrorResponse.new(request, error)
         request.response = response
         request.emit(:response, response)

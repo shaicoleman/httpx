@@ -294,6 +294,9 @@ module HTTPX
     ######
 
     def on_stream_headers(stream, request, h)
+      # Skip if request already timed out (total_timeout)
+      return if request.timed_out?
+
       response = request.response
 
       if response.is_a?(Response) && response.version == "2.0"

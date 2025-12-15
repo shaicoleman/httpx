@@ -111,8 +111,8 @@ module HTTPX
       return if connection.options.io
 
       @connection_mtx.synchronize do
-        if connection.coalesced? || connection.state == :idle
-          # when connections coalesce
+        if connection.coalesced? || connection.state == :idle || connection.state == :closed
+          # when connections coalesce, or are in a terminal state
           drop_connection(connection)
 
           return
